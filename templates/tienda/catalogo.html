@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Catálogo | Raíz Verde{% endblock %}
+
+{% block content %}
+<div class="contenedor">
+
+    <div class="catalogo-encabezado">
+        <h1 class="seccion-titulo">Nuestro Catálogo</h1>
+        <p class="auth-subtitulo">Encuentra plantas de interior, exterior, macetas y todo para tu jardín.</p>
+    </div>
+
+    <!-- Barra de búsqueda y filtros -->
+    <form method="GET" action="{% url 'catalogo' %}" class="filtros-panel">
+        <div class="busqueda-fila">
+            <input
+                type="text"
+                name="q"
+                value="{{ busqueda }}"
+                class="formulario-input"
+                placeholder="Buscar plantas, macetas o herramientas..."
+            >
+            <button type="submit" class="btn-primario">Buscar</button>
+        </div>
+
+        <!-- Chips de Categorías -->
+        <div class="categorias-fila">
+            <a href="{% url 'catalogo' %}{% if busqueda %}?q={{ busqueda }}{% endif %}"
+               class="chip-categoria {% if not categoria_activa %}activo{% endif %}">
+                Todas
+            </a>
+            {% for cat in categorias %}
+                <a href="{% url 'catalogo' %}?categoria={{ cat.id }}{% if busqueda %}&q={{ busqueda }}{% endif %}"
+                   class="chip-categoria {% if categoria_activa == cat.id %}activo{% endif %}">
+                    {{ cat.nombre }}
+                </a>
+            {% endfor %}
+        </div>
+
+        {% if categoria_activa %}
+            <input type="hidden" name="categoria" value="{{ categoria_activa }}">
+        {% endif %}
+
+        <!-- Filtro de precio y disponibilidad -->
+        <div class="filtros-avanzados">
+            <div class="filtro-precio">
+                <label>Precio (Q):</label>
+                <input type="number" step="0.01" min="0" name="precio_min" value="{{ precio_min }}" placeholder="Mín" class="input-corto">
+                <span>—</span>
+                <input type="number" step="0.01" min="0" name="precio_max" value="{{ precio_max }}" placeholder="Máx" class="input-corto">
+            </div>
+
+            <label class="filtro-check">
+                <input type="checkbox" name="disponibles" value="1" {% if solo_disponibles %}checked{% endif %}>
+                Solo disponibles
+            </label>
+
+            <div class="filtro-acciones">
+                <button type="submit" class="btn-secundario btn-sm">Aplicar filtros</button>
+                {% if busqueda or categoria_activa or precio_min or precio_max or solo_disponibles %}
+                    <a href="{% url 'catalogo' %}" class="enlace-limpiar">Limpiar</a>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+
+    <!-- Resultados del Catálogo -->
+    {% if productos %}
+        <div class="productos-grid">
+            {% for producto in productos %}
+                <article class="tarjeta-producto">
+                    <a href="{% url 'detalle_producto' producto.id %}" class="producto-imagen-link">
+                        {% if producto.imagen %}
+                            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="producto-imagen">
+                        {% else %}
+                            <div class="producto-imagen-vacia">🪴</div>
+                        {% endif %}
+                    </a>
+
+                    <div class="producto-info">
+                        <span class="producto-categoria">{{ producto.categoria.nombre }}</span>
+                        <h2 class="producto-nombre">
+                            <a href="{% url 'detalle_producto' producto.id %}">{{ producto.nombre }}</a>
+                        </h2>
+                        <p class="producto-precio">Q{{ producto.precio }}</p>
+
+                        {% if producto.esta_disponible %}
+                            <p class="estado-stock disponible"><span class="punto"></span> Disponible ({{ producto.existencias }})</p>
+                            <a href="{% url 'detalle_producto' producto.id %}" class="btn-primario btn-ancho btn-sm">Ver detalle</a>
+                        {% else %}
+                            <p class="estado-stock agotado"><span class="punto"></span> Agotado</p>
+                            <a href="{% url 'detalle_producto' producto.id %}" class="btn-agotado btn-ancho btn-sm">Agotado</a>
+                        {% endif %}
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Estado Sin Resultados (CU-04 flujo 2a) -->
+        <div class="estado-vacio">
+            <span class="vacio-icono">🔍🪴</span>
+            <h2 class="auth-titulo">No se encontraron productos</h2>
+            <p class="auth-subtitulo">Intenta con otro nombre o ajusta los filtros de precio y categoría.</p>
+            <a href="{% url 'catalogo' %}" class="btn-primario" style="margin-top: 16px;">Limpiar filtros</a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -4,17 +4,98 @@
 
 {% block content %}
 <div class="contenedor">
-    <div class="auth-tarjeta" style="max-width: 720px; margin: 0 auto; text-align: center;">
-        <span class="auth-icono">🪴</span>
-        <h1 class="auth-titulo">Bienvenido a Raíz Verde</h1>
-        <p class="auth-subtitulo" style="margin-bottom: 20px;">
-            La plantilla base y el sistema de autenticación (CU-01 y CU-02) ya están funcionando.
-            En el siguiente paso construiremos el Inicio completo, el Catálogo y el Detalle de producto.
-        </p>
-        {% if not user.is_authenticated %}
-            <a href="{% url 'registro' %}" class="btn-primario">Crear cuenta</a>
-            <a href="{% url 'login' %}" class="btn-secundario">Iniciar sesión</a>
-        {% endif %}
-    </div>
+
+    <!-- Sección Hero -->
+    <section class="hero">
+        <div class="hero-texto">
+            <span class="chip-etiqueta">VIVERO BOUTIQUE EN GUATEMALA</span>
+            <h1 class="hero-titulo">Lleva naturaleza viva y armonía a tu hogar</h1>
+            <p class="hero-subtitulo">
+                Plantas saludables, macetas artesanales y asesoría botánica con entrega segura en Ciudad de Guatemala.
+            </p>
+            <div class="hero-botones">
+                <a href="{% url 'catalogo' %}" class="btn-primario">Explorar catálogo</a>
+                <a href="{% url 'catalogo' %}?categoria=1" class="btn-secundario">Ver plantas de interior</a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="hero-imagen-placeholder">
+                <span class="hero-emoji">🌿🪴</span>
+                <p>Colección botánica seleccionada</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Explora por Categoría -->
+    <section class="seccion-bloque">
+        <div class="seccion-encabezado">
+            <h2 class="seccion-titulo">Explora por categoría</h2>
+        </div>
+        <div class="categorias-fila">
+            {% for cat in categorias %}
+                <a href="{% url 'catalogo' %}?categoria={{ cat.id }}" class="chip-categoria">
+                    {{ cat.nombre }}
+                </a>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Plantas y Productos Destacados -->
+    <section class="seccion-bloque">
+        <div class="seccion-encabezado">
+            <h2 class="seccion-titulo">Productos destacados</h2>
+            <a href="{% url 'catalogo' %}" class="enlace-destacado">Ver todo el catálogo →</a>
+        </div>
+
+        <div class="productos-grid">
+            {% for producto in destacados %}
+                <article class="tarjeta-producto">
+                    <a href="{% url 'detalle_producto' producto.id %}" class="producto-imagen-link">
+                        {% if producto.imagen %}
+                            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="producto-imagen">
+                        {% else %}
+                            <div class="producto-imagen-vacia">🪴</div>
+                        {% endif %}
+                    </a>
+
+                    <div class="producto-info">
+                        <span class="producto-categoria">{{ producto.categoria.nombre }}</span>
+                        <h3 class="producto-nombre">
+                            <a href="{% url 'detalle_producto' producto.id %}">{{ producto.nombre }}</a>
+                        </h3>
+                        <p class="producto-precio">Q{{ producto.precio }}</p>
+
+                        {% if producto.esta_disponible %}
+                            <p class="estado-stock disponible"><span class="punto"></span> Disponible ({{ producto.existencias }})</p>
+                            <a href="{% url 'detalle_producto' producto.id %}" class="btn-primario btn-ancho btn-sm">Ver producto</a>
+                        {% else %}
+                            <p class="estado-stock agotado"><span class="punto"></span> Agotado</p>
+                            <a href="{% url 'detalle_producto' producto.id %}" class="btn-agotado btn-ancho btn-sm">Agotado</a>
+                        {% endif %}
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Franja de beneficios -->
+    <section class="beneficios-grid">
+        <div class="beneficio-tarjeta">
+            <span class="beneficio-icono">🚚</span>
+            <h3 class="beneficio-titulo">Envío protegido en Guatemala</h3>
+            <p class="beneficio-texto">Entrega en 24-48 hrs a domicilio o retiro gratis en nuestra tienda.</p>
+        </div>
+        <div class="beneficio-tarjeta">
+            <span class="beneficio-icono">🌱</span>
+            <h3 class="beneficio-titulo">Garantía botánica de 15 días</h3>
+            <p class="beneficio-texto">Acompañamiento personalizado para la aclimatación de tu planta.</p>
+        </div>
+        <div class="beneficio-tarjeta">
+            <span class="beneficio-icono">💬</span>
+            <h3 class="beneficio-titulo">Asesoría por WhatsApp</h3>
+            <p class="beneficio-texto">Resolvemos tus dudas sobre luz, frecuencia de riego y sustratos.</p>
+        </div>
+    </section>
+
 </div>
 {% endblock %}

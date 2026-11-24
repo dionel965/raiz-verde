@@ -1,11 +1,71 @@
-from django.shortcuts import render, redirect
+from decimal import Decimal, InvalidOperation
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.db.models import Q
+from .models import Categoria, Producto
 
 
 def inicio(request):
-    return render(request, 'tienda/inicio.html')
+    categorias = Categoria.objects.all()
+    destacados = Producto.objects.filter(activo=True, destacado=True)[:4]
+    return render(request, 'tienda/inicio.html', {
+        'categorias': categorias,
+        'destacados': destacados,
+    })
+
+
+def catalogo(request):
+    categorias = Categoria.objects.all()
+    productos = Producto.objects.filter(activo=True)
+
+    busqueda = request.GET.get('q', '').strip()
+    categoria_id = request.GET.get('categoria', '').strip()
+    precio_min = request.GET.get('precio_min', '').strip()
+    precio_max = request.GET.get('precio_max', '').strip()
+    solo_disponibles = request.GET.get('disponibles', '') == '1'
+
+    if busqueda:
+        productos = productos.filter(
+            Q(nombre__icontains=busqueda) | Q(descripcion__icontains=busqueda)
+        )
+
+    if categoria_id.isdigit():
+        productos = productos.filter(categoria_id=int(categoria_id))
+
+    if precio_min:
+        try:
+            productos = productos.filter(precio__gte=Decimal(precio_min))
+        except InvalidOperation:
+            pass
+
+    if precio_max:
+        try:
+            productos = productos.filter(precio__lte=Decimal(precio_max))
+        except InvalidOperation:
+            pass
+
+    if solo_disponibles:
+        productos = productos.filter(existencias__gt=0)
+
+    contexto = {
+        'categorias': categorias,
+        'productos': productos,
+        'busqueda': busqueda,
+        'categoria_activa': int(categoria_id) if categoria_id.isdigit() else None,
+        'precio_min': precio_min,
+        'precio_max': precio_max,
+        'solo_disponibles': solo_disponibles,
+    }
+    return render(request, 'tienda/catalogo.html', contexto)
+
+
+def detalle_producto(request, producto_id):
+    producto = get_object_or_404(Producto, id=producto_id, activo=True)
+    return render(request, 'tienda/detalle_producto.html', {
+        'producto': producto,
+    })
 
 
 def registro_usuario(request):
@@ -25,13 +85,11 @@ def registro_usuario(request):
         if not nombre:
             errores['nombre'] = 'Ingresa tu nombre completo.'
 
-        # Validación CU-01 flujo 4a: correo duplicado
         if not correo:
             errores['correo'] = 'Ingresa un correo electrónico válido.'
         elif User.objects.filter(username=correo).exists() or User.objects.filter(email=correo).exists():
             errores['correo'] = 'Este correo electrónico ya está registrado. Intenta iniciar sesión o usa otro.'
 
-        # Validación CU-01 flujo 4b: contraseña corta
         if len(password) < 8:
             errores['password'] = 'La contraseña es muy corta (debe tener al menos 8 caracteres).'
 
@@ -69,13 +127,11 @@ def login_usuario(request):
 
         if usuario is not None:
             login(request, usuario)
-            # Si es administrador, lo llevamos directo a Django Admin (CU-02)
             if usuario.is_staff:
                 return redirect('/admin/')
             siguiente = request.GET.get('next')
             return redirect(siguiente if siguiente else 'inicio')
         else:
-            # Validación CU-02 flujo 4a: credenciales incorrectas
             error_login = 'El correo electrónico o la contraseña son incorrectos. Verifica tus datos e intenta de nuevo.'
 
     return render(request, 'usuarios/login.html', {'error_login': error_login, 'correo': correo})

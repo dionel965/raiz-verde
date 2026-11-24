@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ producto.nombre }} | Raíz Verde{% endblock %}
+
+{% block content %}
+<div class="contenedor">
+
+    <div class="migas-pan">
+        <a href="{% url 'catalogo' %}" class="enlace-destacado">← Volver al catálogo</a>
+        <span> / {{ producto.categoria.nombre }} / {{ producto.nombre }}</span>
+    </div>
+
+    <div class="detalle-grid">
+        <!-- Columna izquierda: Imagen -->
+        <div class="detalle-imagen-caja">
+            {% if producto.imagen %}
+                <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="detalle-imagen">
+            {% else %}
+                <div class="detalle-imagen-vacia">🪴</div>
+            {% endif %}
+        </div>
+
+        <!-- Columna derecha: Información y compra -->
+        <div class="detalle-info">
+            <span class="chip-etiqueta">{{ producto.categoria.nombre }}</span>
+            <h1 class="detalle-titulo">{{ producto.nombre }}</h1>
+            <p class="detalle-precio">Q{{ producto.precio }}</p>
+
+            {% if producto.esta_disponible %}
+                <p class="estado-stock disponible">
+                    <span class="punto"></span> Disponible ({{ producto.existencias }} unidades en existencia)
+                </p>
+            {% else %}
+                <p class="estado-stock agotado">
+                    <span class="punto"></span> Agotado (0 unidades disponibles)
+                </p>
+            {% endif %}
+
+            <p class="detalle-descripcion">{{ producto.descripcion }}</p>
+
+            <!-- Cuidados (solo si el producto los tiene registrados - CU-05) -->
+            {% if producto.tiene_cuidados %}
+                <div class="cuidados-caja">
+                    <h3 class="cuidados-titulo">Cuidados de la planta</h3>
+                    <div class="cuidados-grid">
+                        {% if producto.luz %}
+                            <div class="cuidado-item">
+                                <span class="cuidado-label">☀️ Luz</span>
+                                <span class="cuidado-valor">{{ producto.luz }}</span>
+                            </div>
+                        {% endif %}
+                        {% if producto.riego %}
+                            <div class="cuidado-item">
+                                <span class="cuidado-label">💧 Riego</span>
+                                <span class="cuidado-valor">{{ producto.riego }}</span>
+                            </div>
+                        {% endif %}
+                        {% if producto.tamano %}
+                            <div class="cuidado-item">
+                                <span class="cuidado-label">📏 Tamaño</span>
+                                <span class="cuidado-valor">{{ producto.tamano }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Acción de compra -->
+            <div class="detalle-compra">
+                {% if producto.esta_disponible %}
+                    <form method="POST" action="#" class="form-agregar-carrito">
+                        {% csrf_token %}
+                        <label for="cantidad" class="formulario-etiqueta">Cantidad:</label>
+                        <div class="compra-fila">
+                            <input
+                                type="number"
+                                id="cantidad"
+                                name="cantidad"
+                                value="1"
+                                min="1"
+                                max="{{ producto.existencias }}"
+                                class="input-cantidad"
+                            >
+                            <button type="submit" class="btn-primario btn-comprar">
+                                🛒 Agregar al carrito
+                            </button>
+                        </div>
+                    </form>
+                {% else %}
+                    <button type="button" class="btn-agotado btn-ancho" disabled>
+                        Producto agotado
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
