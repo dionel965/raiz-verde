@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio | Raíz Verde{% endblock %}
+
+{% block content %}
+<div class="contenedor">
+    <div class="auth-tarjeta" style="max-width: 720px; margin: 0 auto; text-align: center;">
+        <span class="auth-icono">🪴</span>
+        <h1 class="auth-titulo">Bienvenido a Raíz Verde</h1>
+        <p class="auth-subtitulo" style="margin-bottom: 20px;">
+            La plantilla base y el sistema de autenticación (CU-01 y CU-02) ya están funcionando.
+            En el siguiente paso construiremos el Inicio completo, el Catálogo y el Detalle de producto.
+        </p>
+        {% if not user.is_authenticated %}
+            <a href="{% url 'registro' %}" class="btn-primario">Crear cuenta</a>
+            <a href="{% url 'login' %}" class="btn-secundario">Iniciar sesión</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

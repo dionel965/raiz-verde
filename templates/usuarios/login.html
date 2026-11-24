@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Iniciar sesión | Raíz Verde{% endblock %}
+
+{% block content %}
+<div class="auth-contenedor">
+    <div class="auth-tarjeta">
+        <div class="auth-encabezado">
+            <span class="auth-icono">🌿</span>
+            <h1 class="auth-titulo">Bienvenido de nuevo</h1>
+            <p class="auth-subtitulo">Ingresa a tu cuenta de Raíz Verde para continuar.</p>
+        </div>
+
+        {% if error_login %}
+            <div class="alerta alerta-error">
+                ⚠ {{ error_login }}
+            </div>
+        {% endif %}
+
+        <form method="POST" novalidate>
+            {% csrf_token %}
+
+            <div class="formulario-grupo">
+                <label for="correo" class="formulario-etiqueta">Correo electrónico</label>
+                <input
+                    type="email"
+                    id="correo"
+                    name="correo"
+                    class="formulario-input {% if error_login %}input-error{% endif %}"
+                    placeholder="correo@ejemplo.com"
+                    value="{{ correo|default:'' }}"
+                    required
+                >
+            </div>
+
+            <div class="formulario-grupo">
+                <label for="password" class="formulario-etiqueta">Contraseña</label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    class="formulario-input {% if error_login %}input-error{% endif %}"
+                    placeholder="••••••••"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="btn-primario btn-ancho">Iniciar sesión</button>
+        </form>
+
+        <div class="auth-pie">
+            ¿Aún no tienes cuenta? <a href="{% url 'registro' %}" class="enlace-destacado">Regístrate aquí</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

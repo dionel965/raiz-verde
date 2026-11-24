@@ -1,0 +1,86 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Raíz Verde | Vivero Boutique{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
+</head>
+<body class="pagina-cuerpo">
+
+    <!-- Barra de navegación superior -->
+    <header class="navbar">
+        <div class="contenedor navbar-contenido">
+            <a href="{% url 'inicio' %}" class="navbar-logo">
+                <span class="logo-icono">🌿</span>
+                <span class="logo-texto">Raíz Verde</span>
+            </a>
+
+            <nav class="navbar-enlaces">
+                <a href="{% url 'inicio' %}" class="nav-link">Inicio</a>
+                <a href="#" class="nav-link">Catálogo</a>
+                {% if user.is_authenticated %}
+                    <a href="#" class="nav-link">Mis pedidos</a>
+                {% endif %}
+            </nav>
+
+            <div class="navbar-acciones">
+                <a href="#" class="btn-carrito" title="Ver carrito">
+                    🛒 <span class="carrito-contador">{{ request.session.carrito|length|default:"0" }}</span>
+                </a>
+
+                {% if user.is_authenticated %}
+                    <span class="usuario-saludo">Hola, {{ user.first_name|default:user.username }}</span>
+                    {% if user.is_staff %}
+                        <a href="/admin/" class="btn-secundario btn-sm">Panel Admin</a>
+                    {% endif %}
+                    <a href="{% url 'logout' %}" class="btn-secundario btn-sm">Cerrar sesión</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn-secundario btn-sm">Iniciar sesión</a>
+                    <a href="{% url 'registro' %}" class="btn-primario btn-sm">Crear cuenta</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Mensajes del sistema -->
+    {% if messages %}
+        <div class="contenedor mensajes-contenedor">
+            {% for message in messages %}
+                <div class="alerta alerta-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Contenido principal de cada vista -->
+    <main class="contenido-principal">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Pie de página -->
+    <footer class="footer">
+        <div class="contenedor footer-contenido">
+            <div class="footer-col">
+                <h3 class="footer-titulo">Raíz Verde</h3>
+                <p class="footer-texto">Plantas saludables, macetas artesanales y asesoría botánica en Ciudad de Guatemala.</p>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-subtitulo">Punto de retiro</h4>
+                <p class="footer-texto">12 Calle 4-55 Zona 1, Local 3<br>Lun - Sáb: 9:00 a 18:00 hrs</p>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-subtitulo">Contacto</h4>
+                <p class="footer-texto">WhatsApp: +502 2345-6789<br>hola@raizverde.gt</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

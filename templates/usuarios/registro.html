@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Crear cuenta | Raíz Verde{% endblock %}
+
+{% block content %}
+<div class="auth-contenedor">
+    <div class="auth-tarjeta">
+        <div class="auth-encabezado">
+            <span class="auth-icono">🌱</span>
+            <h1 class="auth-titulo">Crea tu cuenta</h1>
+            <p class="auth-subtitulo">Únete a Raíz Verde para gestionar tus compras y pedidos.</p>
+        </div>
+
+        <form method="POST" novalidate>
+            {% csrf_token %}
+
+            <div class="formulario-grupo">
+                <label for="nombre" class="formulario-etiqueta">Nombre completo</label>
+                <input
+                    type="text"
+                    id="nombre"
+                    name="nombre"
+                    class="formulario-input {% if errores.nombre %}input-error{% endif %}"
+                    placeholder="Ej. Ana Lucía Morales"
+                    value="{{ datos.nombre|default:'' }}"
+                    required
+                >
+                {% if errores.nombre %}
+                    <span class="texto-error">⚠ {{ errores.nombre }}</span>
+                {% endif %}
+            </div>
+
+            <div class="formulario-grupo">
+                <label for="correo" class="formulario-etiqueta">Correo electrónico</label>
+                <input
+                    type="email"
+                    id="correo"
+                    name="correo"
+                    class="formulario-input {% if errores.correo %}input-error{% endif %}"
+                    placeholder="correo@ejemplo.com"
+                    value="{{ datos.correo|default:'' }}"
+                    required
+                >
+                {% if errores.correo %}
+                    <span class="texto-error">⚠ {{ errores.correo }}</span>
+                {% endif %}
+            </div>
+
+            <div class="formulario-grupo">
+                <label for="password" class="formulario-etiqueta">Contraseña</label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    class="formulario-input {% if errores.password %}input-error{% endif %}"
+                    placeholder="Mínimo 8 caracteres"
+                    required
+                >
+                {% if errores.password %}
+                    <span class="texto-error">⚠ {{ errores.password }}</span>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn-primario btn-ancho">Crear cuenta</button>
+        </form>
+
+        <div class="auth-pie">
+            ¿Ya tienes una cuenta? <a href="{% url 'login' %}" class="enlace-destacado">Inicia sesión</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
