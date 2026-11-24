@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Tu Carrito | Raíz Verde{% endblock %}
+
+{% block content %}
+<div class="contenedor">
+
+    {% if items %}
+        <div class="seccion-encabezado">
+            <h1 class="seccion-titulo">Tu Carrito de Compras</h1>
+            <a href="{% url 'catalogo' %}" class="enlace-destacado">← Seguir comprando</a>
+        </div>
+
+        <div class="carrito-grid">
+            <!-- Columna izquierda: Lista de productos -->
+            <div class="carrito-lista">
+                {% for item in items %}
+                    <article class="carrito-item">
+                        <a href="{% url 'detalle_producto' item.producto.id %}" class="carrito-item-img-link">
+                            {% if item.producto.imagen %}
+                                <img src="{{ item.producto.imagen.url }}" alt="{{ item.producto.nombre }}" class="carrito-item-img">
+                            {% else %}
+                                <div class="carrito-item-img-vacia">🪴</div>
+                            {% endif %}
+                        </a>
+
+                        <div class="carrito-item-detalle">
+                            <span class="producto-categoria">{{ item.producto.categoria.nombre }}</span>
+                            <h2 class="carrito-item-nombre">
+                                <a href="{% url 'detalle_producto' item.producto.id %}">{{ item.producto.nombre }}</a>
+                            </h2>
+                            <p class="carrito-item-precio">Q{{ item.producto.precio }} c/u</p>
+
+                            <!-- Control de cantidad (- 1 +) -->
+                            <div class="cantidad-controles">
+                                <form method="POST" action="{% url 'actualizar_carrito' item.producto.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="accion" value="restar">
+                                    <button type="submit" class="btn-cantidad" title="Disminuir">−</button>
+                                </form>
+
+                                <span class="cantidad-valor">{{ item.cantidad }}</span>
+
+                                <form method="POST" action="{% url 'actualizar_carrito' item.producto.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="accion" value="sumar">
+                                    <button type="submit" class="btn-cantidad" {% if item.alcanzo_maximo %}disabled{% endif %} title="Aumentar">+</button>
+                                </form>
+                            </div>
+
+                            <!-- Aviso discreto de stock máximo (CU-06 flujo 3a) -->
+                            {% if item.alcanzo_maximo %}
+                                <span class="aviso-stock-max">
+                                    ⚠ Máximo disponible: {{ item.producto.existencias }} unidades en existencia
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <div class="carrito-item-derecha">
+                            <p class="carrito-item-subtotal">Q{{ item.subtotal }}</p>
+                            <form method="POST" action="{% url 'eliminar_del_carrito' item.producto.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-eliminar" title="Eliminar producto">🗑️ Eliminar</button>
+                            </form>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+
+            <!-- Columna derecha: Resumen del carrito -->
+            <aside class="carrito-resumen">
+                <h2 class="resumen-titulo">Resumen del carrito</h2>
+
+                <div class="resumen-fila">
+                    <span>Subtotal ({{ total_unidades }} producto{{ total_unidades|pluralize }})</span>
+                    <span>Q{{ subtotal_general }}</span>
+                </div>
+
+                <div class="resumen-fila texto-suave">
+                    <span>Envío</span>
+                    <span>Se calcula en el siguiente paso</span>
+                </div>
+
+                <hr class="resumen-divisor">
+
+                <div class="resumen-fila resumen-total">
+                    <span>Total estimado</span>
+                    <span class="precio-destacado">Q{{ subtotal_general }}</span>
+                </div>
+
+                <a href="#" class="btn-primario btn-ancho" style="margin-top: 16px;">
+                    Realizar pedido
+                </a>
+            </aside>
+        </div>
+
+    {% else %}
+        <!-- Estado Carrito Vacío (CU-06 flujo 4a) -->
+        <div class="estado-vacio">
+            <span class="vacio-icono">🛒🌱</span>
+            <h1 class="auth-titulo">Tu carrito está vacío</h1>
+            <p class="auth-subtitulo">Aún no has agregado plantas ni accesorios de jardinería a tu compra.</p>
+            <a href="{% url 'catalogo' %}" class="btn-primario" style="margin-top: 18px;">Explorar catálogo</a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

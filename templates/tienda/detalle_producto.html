@@ -68,7 +68,7 @@
             <!-- Acción de compra -->
             <div class="detalle-compra">
                 {% if producto.esta_disponible %}
-                    <form method="POST" action="#" class="form-agregar-carrito">
+                    <form method="POST" action="{% url 'agregar_al_carrito' producto.id %}" class="form-agregar-carrito">
                         {% csrf_token %}
                         <label for="cantidad" class="formulario-etiqueta">Cantidad:</label>
                         <div class="compra-fila">
