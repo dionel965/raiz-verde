@@ -296,7 +296,6 @@ def procesar_pago(request):
             errores_campos['cvv'] = 'Código CVV inválido.'
 
         if not errores_campos:
-            # Simulación de estados de la pasarela (CU-09 flujos 4a y 4b)
             if numero_tarjeta.endswith('0000'):
                 error_pasarela = {
                     'titulo': 'Pago rechazado por la pasarela',
@@ -308,10 +307,8 @@ def procesar_pago(request):
                     'detalle': 'No se pudo completar el cobro en este momento por tiempo de espera agotado. Intenta de nuevo en unos segundos.',
                 }
             else:
-                # Flujo principal: Pago aprobado -> registrar pedido y descontar stock
                 try:
                     with transaction.atomic():
-                        # Verificar stock final antes de confirmar
                         for item in items:
                             prod_actual = Producto.objects.select_for_update().get(id=item['producto'].id)
                             if prod_actual.existencias < item['cantidad']:
@@ -343,7 +340,6 @@ def procesar_pago(request):
                             prod_actual.existencias -= item['cantidad']
                             prod_actual.save()
 
-                    # Vaciar carrito y datos temporales de checkout (CU-07)
                     request.session['carrito'] = {}
                     request.session.pop('checkout_entrega', None)
                     request.session.modified = True
@@ -374,6 +370,31 @@ def confirmacion_pedido(request, pedido_id):
     return render(request, 'pedidos/confirmacion.html', {
         'pedido': pedido,
         'detalles': pedido.detalles.select_related('producto').all(),
+    })
+
+
+# =========================================================
+# SEGUIMIENTO E HISTORIAL DE PEDIDOS (CU-10)
+# =========================================================
+
+@login_required(login_url='login')
+def mis_pedidos(request):
+    pedidos = Pedido.objects.filter(usuario=request.user).order_by('-creado_en')
+    return render(request, 'pedidos/mis_pedidos.html', {
+        'pedidos': pedidos,
+    })
+
+
+@login_required(login_url='login')
+def detalle_pedido(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id, usuario=request.user)
+    orden_estados = ['PAGADO', 'PREPARACION', 'EN_CAMINO', 'ENTREGADO']
+    indice_actual = orden_estados.index(pedido.estado) if pedido.estado in orden_estados else 0
+
+    return render(request, 'pedidos/detalle_pedido.html', {
+        'pedido': pedido,
+        'detalles': pedido.detalles.select_related('producto').all(),
+        'indice_actual': indice_actual,
     })
 
 

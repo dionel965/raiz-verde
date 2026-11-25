@@ -17,6 +17,10 @@ urlpatterns = [
     path('pedido/pago/', views.procesar_pago, name='procesar_pago'),
     path('pedido/confirmacion/<int:pedido_id>/', views.confirmacion_pedido, name='confirmacion_pedido'),
 
+    # Rutas de Seguimiento e Historial (CU-10)
+    path('mis-pedidos/', views.mis_pedidos, name='mis_pedidos'),
+    path('mis-pedidos/<int:pedido_id>/', views.detalle_pedido, name='detalle_pedido'),
+
     # Autenticación (CU-01 y CU-02)
     path('registro/', views.registro_usuario, name='registro'),
     path('login/', views.login_usuario, name='login'),

@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Mis Pedidos | Raíz Verde{% endblock %}
+
+{% block content %}
+<div class="contenedor">
+
+    <div class="catalogo-encabezado">
+        <h1 class="seccion-titulo">Mis Pedidos</h1>
+        <p class="auth-subtitulo">Consulta el historial y el estado actual de tus compras en Raíz Verde.</p>
+    </div>
+
+    {% if pedidos %}
+        <div class="pedidos-lista">
+            {% for pedido in pedidos %}
+                <article class="pedido-card">
+                    <div class="pedido-card-info">
+                        <span class="pedido-codigo">{{ pedido.codigo }}</span>
+                        <span class="pedido-fecha">Realizado el {{ pedido.creado_en|date:"d/m/Y H:i" }} hrs</span>
+                        <span class="pedido-metodo">{{ pedido.get_metodo_entrega_display }}</span>
+                    </div>
+
+                    <div class="pedido-card-estado">
+                        <span class="badge-estado estado-{{ pedido.estado|lower }}">
+                            {{ pedido.get_estado_display }}
+                        </span>
+                    </div>
+
+                    <div class="pedido-card-derecha">
+                        <span class="producto-precio" style="margin-bottom: 0;">Q{{ pedido.total }}</span>
+                        <a href="{% url 'detalle_pedido' pedido.id %}" class="btn-secundario btn-sm">
+                            Ver detalle →
+                        </a>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Estado Sin Pedidos (CU-10 flujo 2a) -->
+        <div class="estado-vacio">
+            <span class="vacio-icono">📦🌱</span>
+            <h2 class="auth-titulo">Aún no tienes pedidos</h2>
+            <p class="auth-subtitulo">Cuando realices tu primera compra, podrás darle seguimiento aquí mismo.</p>
+            <a href="{% url 'catalogo' %}" class="btn-primario" style="margin-top: 18px;">Ir al catálogo</a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

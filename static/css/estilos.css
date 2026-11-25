@@ -1128,3 +1128,159 @@ body.pagina-cuerpo {
         grid-template-columns: 1fr;
     }
 }
+/* =========================================================
+   PASO 7: MIS PEDIDOS Y DETALLE DEL PEDIDO (CU-10)
+   ========================================================= */
+
+.pedidos-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.pedido-card {
+    background-color: var(--color-blanco);
+    border-radius: 14px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    box-shadow: 0 2px 10px rgba(30, 58, 47, 0.05);
+}
+
+.pedido-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.pedido-codigo {
+    font-family: var(--fuente-titulo);
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--color-verde-bosque);
+}
+
+.pedido-fecha,
+.pedido-metodo {
+    font-size: 0.86rem;
+    color: #666;
+}
+
+.pedido-card-derecha {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* Colores por estado */
+.estado-pagado {
+    background-color: #E3F2FD;
+    color: #1565C0;
+}
+
+.estado-preparacion {
+    background-color: #FFF3E0;
+    color: #E65100;
+}
+
+.estado-en_camino {
+    background-color: var(--color-verde-salvia);
+    color: var(--color-verde-bosque);
+}
+
+.estado-entregado {
+    background-color: var(--color-verde-bosque);
+    color: var(--color-blanco);
+}
+
+/* Línea de progreso de 4 estados */
+.seguimiento-caja {
+    background-color: var(--color-blanco);
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 3px 14px rgba(30, 58, 47, 0.06);
+}
+
+.seguimiento-pasos {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.seg-paso {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    min-width: 100px;
+}
+
+.seg-circulo {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #E0E0E0;
+    color: #666;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.seg-paso.completado .seg-circulo {
+    background-color: var(--color-verde-bosque);
+    color: var(--color-blanco);
+}
+
+.seg-paso.actual .seg-circulo {
+    background-color: var(--color-verde-bosque);
+    color: var(--color-blanco);
+    box-shadow: 0 0 0 5px var(--color-verde-salvia);
+}
+
+.seg-texto {
+    font-size: 0.86rem;
+    color: #666;
+}
+
+.seg-paso.actual .seg-texto,
+.seg-paso.completado .seg-texto {
+    color: var(--color-verde-bosque);
+    font-weight: 600;
+}
+
+.seg-linea {
+    flex: 1;
+    height: 3px;
+    background-color: #E0E0E0;
+    margin-bottom: 22px;
+}
+
+.seg-linea.activa {
+    background-color: var(--color-verde-bosque);
+}
+
+@media (max-width: 640px) {
+    .seguimiento-pasos {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .seg-paso {
+        flex-direction: row;
+        min-width: auto;
+    }
+
+    .seg-linea {
+        width: 3px;
+        height: 20px;
+        margin-left: 16px;
+        margin-bottom: 0;
+    }
+}

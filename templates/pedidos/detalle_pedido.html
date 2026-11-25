@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle {{ pedido.codigo }} | Raíz Verde{% endblock %}
+
+{% block content %}
+<div class="contenedor">
+
+    <div class="migas-pan">
+        <a href="{% url 'mis_pedidos' %}" class="enlace-destacado">← Volver a mis pedidos</a>
+    </div>
+
+    <div class="seccion-encabezado">
+        <div>
+            <h1 class="seccion-titulo">Pedido {{ pedido.codigo }}</h1>
+            <p class="auth-subtitulo">Realizado el {{ pedido.creado_en|date:"d/m/Y" }} a las {{ pedido.creado_en|date:"H:i" }} hrs</p>
+        </div>
+        <span class="badge-estado estado-{{ pedido.estado|lower }}">
+            {{ pedido.get_estado_display }}
+        </span>
+    </div>
+
+    <!-- Línea de seguimiento de 4 estados (CU-10) -->
+    <section class="seguimiento-caja">
+        <h2 class="cuidados-titulo" style="margin-bottom: 18px;">Estado de tu pedido</h2>
+
+        <div class="seguimiento-pasos">
+            <!-- Paso 1: Pagado -->
+            <div class="seg-paso {% if indice_actual > 0 %}completado{% elif indice_actual == 0 %}actual{% endif %}">
+                <div class="seg-circulo">{% if indice_actual > 0 %}✓{% else %}1{% endif %}</div>
+                <span class="seg-texto">Pagado</span>
+            </div>
+
+            <div class="seg-linea {% if indice_actual >= 1 %}activa{% endif %}"></div>
+
+            <!-- Paso 2: En preparación -->
+            <div class="seg-paso {% if indice_actual > 1 %}completado{% elif indice_actual == 1 %}actual{% endif %}">
+                <div class="seg-circulo">{% if indice_actual > 1 %}✓{% else %}2{% endif %}</div>
+                <span class="seg-texto">En preparación</span>
+            </div>
+
+            <div class="seg-linea {% if indice_actual >= 2 %}activa{% endif %}"></div>
+
+            <!-- Paso 3: Listo para retiro / En camino -->
+            <div class="seg-paso {% if indice_actual > 2 %}completado{% elif indice_actual == 2 %}actual{% endif %}">
+                <div class="seg-circulo">{% if indice_actual > 2 %}✓{% else %}3{% endif %}</div>
+                <span class="seg-texto">
+                    {% if pedido.metodo_entrega == 'RETIRO' %}Listo para retiro{% else %}En camino{% endif %}
+                </span>
+            </div>
+
+            <div class="seg-linea {% if indice_actual >= 3 %}activa{% endif %}"></div>
+
+            <!-- Paso 4: Entregado -->
+            <div class="seg-paso {% if indice_actual == 3 %}actual completado{% endif %}">
+                <div class="seg-circulo">{% if indice_actual == 3 %}✓{% else %}4{% endif %}</div>
+                <span class="seg-texto">Entregado</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Detalle de productos y datos de entrega -->
+    <div class="checkout-grid">
+        <!-- Columna izquierda: Productos del pedido -->
+        <div class="checkout-tarjeta">
+            <h2 class="resumen-titulo">Productos del pedido</h2>
+
+            <div class="carrito-lista">
+                {% for item in detalles %}
+                    <div class="carrito-item" style="box-shadow: none; border: 1px solid #EEE;">
+                        {% if item.producto.imagen %}
+                            <img src="{{ item.producto.imagen.url }}" alt="{{ item.producto.nombre }}" class="carrito-item-img" style="width: 72px; height: 72px;">
+                        {% else %}
+                            <div class="carrito-item-img-vacia" style="width: 72px; height: 72px; font-size: 1.8rem;">🪴</div>
+                        {% endif %}
+
+                        <div class="carrito-item-detalle">
+                            <h3 class="carrito-item-nombre">{{ item.producto.nombre }}</h3>
+                            <p class="texto-suave">{{ item.cantidad }} unidad{{ item.cantidad|pluralize:"es" }} × Q{{ item.precio_unitario }}</p>
+                        </div>
+
+                        <div class="carrito-item-subtotal">
+                            Q{{ item.subtotal }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Columna derecha: Información de entrega y totales -->
+        <aside class="carrito-resumen">
+            <h2 class="resumen-titulo">Información de entrega y pago</h2>
+
+            <div class="formulario-grupo">
+                <span class="producto-categoria">Método de entrega</span>
+                <p style="font-weight: 600; margin-top: 2px;">{{ pedido.get_metodo_entrega_display }}</p>
+                <p class="texto-suave" style="margin-top: 4px;">{{ pedido.direccion_entrega }}</p>
+                {% if pedido.referencia %}
+                    <p class="texto-suave">Ref: {{ pedido.referencia }}</p>
+                {% endif %}
+                {% if pedido.telefono %}
+                    <p class="texto-suave">Tel: {{ pedido.telefono }}</p>
+                {% endif %}
+            </div>
+
+            <div class="formulario-grupo">
+                <span class="producto-categoria">Método de pago</span>
+                <p style="font-size: 0.92rem; margin-top: 2px;">Tarjeta terminada en •••• {{ pedido.ultimos_digitos_tarjeta }}</p>
+            </div>
+
+            <hr class="resumen-divisor">
+
+            <div class="resumen-fila">
+                <span>Subtotal</span>
+                <span>Q{{ pedido.subtotal }}</span>
+            </div>
+            <div class="resumen-fila">
+                <span>Costo de envío</span>
+                <span>Q{{ pedido.costo_envio }}</span>
+            </div>
+
+            <hr class="resumen-divisor">
+
+            <div class="resumen-fila resumen-total">
+                <span>Total pagado</span>
+                <span class="precio-destacado">Q{{ pedido.total }}</span>
+            </div>
+        </aside>
+    </div>
+
+</div>
+{% endblock %}
