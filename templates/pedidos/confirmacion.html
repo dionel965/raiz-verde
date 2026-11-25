@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Pedido Confirmado {{ pedido.codigo }} | Raíz Verde{% endblock %}
+
+{% block content %}
+<div class="contenedor">
+
+    <!-- Indicador de progreso completado -->
+    <div class="checkout-pasos">
+        <div class="paso-item completado">
+            <span class="paso-circulo">✓</span>
+            <span>Entrega</span>
+        </div>
+        <div class="paso-linea activa"></div>
+        <div class="paso-item completado">
+            <span class="paso-circulo">✓</span>
+            <span>Pago</span>
+        </div>
+        <div class="paso-linea activa"></div>
+        <div class="paso-item activo">
+            <span class="paso-circulo">3</span>
+            <span>Confirmación</span>
+        </div>
+    </div>
+
+    <div class="confirmacion-tarjeta">
+        <div class="confirmacion-encabezado">
+            <div class="confirmacion-check">✓</div>
+            <h1 class="auth-titulo">¡Gracias por tu compra!</h1>
+            <p class="auth-subtitulo">Tu pago ha sido aprobado y tu pedido ya está registrado en nuestro sistema.</p>
+        </div>
+
+        <div class="confirmacion-codigo-caja">
+            <div>
+                <span style="font-size: 0.85rem; color: #555; display: block;">Número de pedido</span>
+                <strong class="confirmacion-codigo">{{ pedido.codigo }}</strong>
+            </div>
+            <span class="badge-estado estado-pagado">Estado: {{ pedido.get_estado_display }}</span>
+        </div>
+
+        <h2 class="cuidados-titulo" style="margin-bottom: 12px;">Comprobante del pedido</h2>
+
+        <div class="comprobante-datos">
+            <div class="resumen-fila">
+                <span class="texto-suave">Fecha y hora:</span>
+                <span>{{ pedido.creado_en|date:"d/m/Y H:i" }} hrs</span>
+            </div>
+            <div class="resumen-fila">
+                <span class="texto-suave">Método de entrega:</span>
+                <span>{{ pedido.get_metodo_entrega_display }}</span>
+            </div>
+            <div class="resumen-fila">
+                <span class="texto-suave">Dirección:</span>
+                <span>{{ pedido.direccion_entrega }}</span>
+            </div>
+            <div class="resumen-fila">
+                <span class="texto-suave">Método de pago:</span>
+                <span>Tarjeta terminada en •••• {{ pedido.ultimos_digitos_tarjeta }}</span>
+            </div>
+        </div>
+
+        <hr class="resumen-divisor">
+
+        <div class="resumen-productos-lista">
+            {% for item in detalles %}
+                <div class="resumen-fila">
+                    <span>{{ item.cantidad }}x {{ item.producto.nombre }}</span>
+                    <span>Q{{ item.subtotal }}</span>
+                </div>
+            {% endfor %}
+        </div>
+
+        <hr class="resumen-divisor">
+
+        <div class="resumen-fila">
+            <span>Subtotal</span>
+            <span>Q{{ pedido.subtotal }}</span>
+        </div>
+        <div class="resumen-fila">
+            <span>Costo de envío</span>
+            <span>Q{{ pedido.costo_envio }}</span>
+        </div>
+        <div class="resumen-fila resumen-total" style="margin-top: 8px;">
+            <span>Total pagado</span>
+            <span class="precio-destacado">Q{{ pedido.total }}</span>
+        </div>
+
+        <div class="confirmacion-acciones">
+            <a href="#" class="btn-primario">Ver mis pedidos</a>
+            <a href="{% url 'catalogo' %}" class="btn-secundario">Volver al catálogo</a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

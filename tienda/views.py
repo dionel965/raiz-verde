@@ -1,10 +1,48 @@
 from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.db import transaction
 from django.db.models import Q
-from .models import Categoria, Producto
+from .models import Categoria, Producto, Pedido, DetallePedido
+
+
+COSTO_ENVIO_DOMICILIO = Decimal('25.00')
+
+
+def _obtener_datos_carrito(request):
+    """Construye la lista validada de ítems del carrito y calcula su subtotal."""
+    carrito_sesion = request.session.get('carrito', {})
+    items = []
+    subtotal_general = Decimal('0.00')
+    total_unidades = 0
+
+    for prod_id_str, cantidad in list(carrito_sesion.items()):
+        producto = Producto.objects.filter(id=int(prod_id_str), activo=True).first()
+        if not producto or producto.existencias <= 0:
+            del carrito_sesion[prod_id_str]
+            request.session.modified = True
+            continue
+
+        if cantidad > producto.existencias:
+            cantidad = producto.existencias
+            carrito_sesion[prod_id_str] = cantidad
+            request.session.modified = True
+
+        subtotal_item = producto.precio * cantidad
+        subtotal_general += subtotal_item
+        total_unidades += cantidad
+
+        items.append({
+            'producto': producto,
+            'cantidad': cantidad,
+            'subtotal': subtotal_item,
+            'alcanzo_maximo': cantidad >= producto.existencias,
+        })
+
+    return items, subtotal_general, total_unidades
 
 
 def inicio(request):
@@ -73,35 +111,7 @@ def detalle_producto(request, producto_id):
 # =========================================================
 
 def ver_carrito(request):
-    carrito_sesion = request.session.get('carrito', {})
-    items = []
-    subtotal_general = Decimal('0.00')
-    total_unidades = 0
-
-    for prod_id_str, cantidad in list(carrito_sesion.items()):
-        producto = Producto.objects.filter(id=int(prod_id_str), activo=True).first()
-        if not producto or producto.existencias <= 0:
-            del carrito_sesion[prod_id_str]
-            request.session.modified = True
-            continue
-
-        # Ajustar si el stock en BD bajó respecto a lo guardado en sesión
-        if cantidad > producto.existencias:
-            cantidad = producto.existencias
-            carrito_sesion[prod_id_str] = cantidad
-            request.session.modified = True
-
-        subtotal_item = producto.precio * cantidad
-        subtotal_general += subtotal_item
-        total_unidades += cantidad
-
-        items.append({
-            'producto': producto,
-            'cantidad': cantidad,
-            'subtotal': subtotal_item,
-            'alcanzo_maximo': cantidad >= producto.existencias,
-        })
-
+    items, subtotal_general, total_unidades = _obtener_datos_carrito(request)
     return render(request, 'tienda/carrito.html', {
         'items': items,
         'subtotal_general': subtotal_general,
@@ -191,6 +201,183 @@ def eliminar_del_carrito(request, producto_id):
 
 
 # =========================================================
+# PROCESO DE COMPRA: ENTREGA, PAGO Y CONFIRMACIÓN (CU-07, CU-08, CU-09)
+# =========================================================
+
+@login_required(login_url='login')
+def seleccionar_entrega(request):
+    items, subtotal_general, total_unidades = _obtener_datos_carrito(request)
+    if not items:
+        messages.error(request, 'Tu carrito está vacío. Agrega productos antes de realizar un pedido.')
+        return redirect('catalogo')
+
+    datos_previos = request.session.get('checkout_entrega', {})
+    metodo = datos_previos.get('metodo_entrega', 'DOMICILIO')
+    direccion = datos_previos.get('direccion_entrega', '')
+    referencia = datos_previos.get('referencia', '')
+    telefono = datos_previos.get('telefono', '')
+    errores = {}
+
+    if request.method == 'POST':
+        metodo = request.POST.get('metodo_entrega', 'DOMICILIO')
+        direccion = request.POST.get('direccion_entrega', '').strip()
+        referencia = request.POST.get('referencia', '').strip()
+        telefono = request.POST.get('telefono', '').strip()
+
+        if metodo not in ('DOMICILIO', 'RETIRO'):
+            metodo = 'DOMICILIO'
+
+        if metodo == 'DOMICILIO':
+            if not direccion:
+                errores['direccion'] = 'Ingresa la dirección completa de entrega.'
+            if not telefono:
+                errores['telefono'] = 'Ingresa un teléfono de contacto para el repartidor.'
+
+        if not errores:
+            costo_envio = COSTO_ENVIO_DOMICILIO if metodo == 'DOMICILIO' else Decimal('0.00')
+            request.session['checkout_entrega'] = {
+                'metodo_entrega': metodo,
+                'direccion_entrega': direccion if metodo == 'DOMICILIO' else '12 Calle 4-55 Zona 1, Local 3 (Retiro en tienda)',
+                'referencia': referencia if metodo == 'DOMICILIO' else '',
+                'telefono': telefono,
+                'costo_envio': str(costo_envio),
+            }
+            request.session.modified = True
+            return redirect('procesar_pago')
+
+    costo_envio_actual = COSTO_ENVIO_DOMICILIO if metodo == 'DOMICILIO' else Decimal('0.00')
+    total_estimado = subtotal_general + costo_envio_actual
+
+    return render(request, 'pedidos/entrega.html', {
+        'items': items,
+        'subtotal_general': subtotal_general,
+        'costo_envio_domicilio': COSTO_ENVIO_DOMICILIO,
+        'costo_envio_actual': costo_envio_actual,
+        'total_estimado': total_estimado,
+        'metodo': metodo,
+        'direccion': direccion,
+        'referencia': referencia,
+        'telefono': telefono,
+        'errores': errores,
+    })
+
+
+@login_required(login_url='login')
+def procesar_pago(request):
+    items, subtotal_general, total_unidades = _obtener_datos_carrito(request)
+    if not items:
+        return redirect('ver_carrito')
+
+    datos_entrega = request.session.get('checkout_entrega')
+    if not datos_entrega:
+        return redirect('seleccionar_entrega')
+
+    costo_envio = Decimal(datos_entrega.get('costo_envio', '0.00'))
+    total_pagar = subtotal_general + costo_envio
+    error_pasarela = None
+    errores_campos = {}
+    titular = request.user.get_full_name() or ''
+    numero_tarjeta = ''
+    expiracion = ''
+
+    if request.method == 'POST':
+        titular = request.POST.get('titular', '').strip()
+        numero_tarjeta = request.POST.get('numero_tarjeta', '').replace(' ', '').strip()
+        expiracion = request.POST.get('expiracion', '').strip()
+        cvv = request.POST.get('cvv', '').strip()
+
+        if not titular:
+            errores_campos['titular'] = 'Ingresa el nombre del titular de la tarjeta.'
+        if not numero_tarjeta.isdigit() or len(numero_tarjeta) < 13 or len(numero_tarjeta) > 19:
+            errores_campos['numero_tarjeta'] = 'Ingresa un número de tarjeta válido (13 a 19 dígitos).'
+        if len(expiracion) < 4:
+            errores_campos['expiracion'] = 'Ingresa una fecha válida (MM/AA).'
+        if not cvv.isdigit() or len(cvv) not in (3, 4):
+            errores_campos['cvv'] = 'Código CVV inválido.'
+
+        if not errores_campos:
+            # Simulación de estados de la pasarela (CU-09 flujos 4a y 4b)
+            if numero_tarjeta.endswith('0000'):
+                error_pasarela = {
+                    'titulo': 'Pago rechazado por la pasarela',
+                    'detalle': 'No se pudo procesar el cobro con los datos ingresados y no se realizó ningún cargo. Verifica tu tarjeta o intenta de nuevo.',
+                }
+            elif numero_tarjeta.endswith('9999'):
+                error_pasarela = {
+                    'titulo': 'La pasarela de pago no responde',
+                    'detalle': 'No se pudo completar el cobro en este momento por tiempo de espera agotado. Intenta de nuevo en unos segundos.',
+                }
+            else:
+                # Flujo principal: Pago aprobado -> registrar pedido y descontar stock
+                try:
+                    with transaction.atomic():
+                        # Verificar stock final antes de confirmar
+                        for item in items:
+                            prod_actual = Producto.objects.select_for_update().get(id=item['producto'].id)
+                            if prod_actual.existencias < item['cantidad']:
+                                raise ValueError(
+                                    f'Existencias insuficientes para "{prod_actual.nombre}" (disponibles: {prod_actual.existencias}).'
+                                )
+
+                        pedido = Pedido.objects.create(
+                            usuario=request.user,
+                            metodo_entrega=datos_entrega['metodo_entrega'],
+                            direccion_entrega=datos_entrega['direccion_entrega'],
+                            referencia=datos_entrega.get('referencia', ''),
+                            telefono=datos_entrega.get('telefono', ''),
+                            subtotal=subtotal_general,
+                            costo_envio=costo_envio,
+                            total=total_pagar,
+                            estado='PAGADO',
+                            ultimos_digitos_tarjeta=numero_tarjeta[-4:],
+                        )
+
+                        for item in items:
+                            prod_actual = Producto.objects.select_for_update().get(id=item['producto'].id)
+                            DetallePedido.objects.create(
+                                pedido=pedido,
+                                producto=prod_actual,
+                                cantidad=item['cantidad'],
+                                precio_unitario=prod_actual.precio,
+                            )
+                            prod_actual.existencias -= item['cantidad']
+                            prod_actual.save()
+
+                    # Vaciar carrito y datos temporales de checkout (CU-07)
+                    request.session['carrito'] = {}
+                    request.session.pop('checkout_entrega', None)
+                    request.session.modified = True
+
+                    return redirect('confirmacion_pedido', pedido_id=pedido.id)
+
+                except ValueError as err:
+                    messages.error(request, str(err))
+                    return redirect('ver_carrito')
+
+    return render(request, 'pedidos/pago.html', {
+        'items': items,
+        'datos_entrega': datos_entrega,
+        'subtotal_general': subtotal_general,
+        'costo_envio': costo_envio,
+        'total_pagar': total_pagar,
+        'error_pasarela': error_pasarela,
+        'errores_campos': errores_campos,
+        'titular': titular,
+        'numero_tarjeta': numero_tarjeta,
+        'expiracion': expiracion,
+    })
+
+
+@login_required(login_url='login')
+def confirmacion_pedido(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id, usuario=request.user)
+    return render(request, 'pedidos/confirmacion.html', {
+        'pedido': pedido,
+        'detalles': pedido.detalles.select_related('producto').all(),
+    })
+
+
+# =========================================================
 # AUTENTICACIÓN (CU-01 Y CU-02)
 # =========================================================
 
@@ -233,7 +420,8 @@ def registro_usuario(request):
             )
             login(request, nuevo_usuario)
             messages.success(request, f'¡Bienvenido a Raíz Verde, {first_name}! Tu cuenta ha sido creada.')
-            return redirect('inicio')
+            siguiente = request.GET.get('next')
+            return redirect(siguiente if siguiente else 'inicio')
 
     return render(request, 'usuarios/registro.html', {'errores': errores, 'datos': datos})
 

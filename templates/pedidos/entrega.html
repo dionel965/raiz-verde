@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}Entrega y Resumen | Raíz Verde{% endblock %}
+
+{% block content %}
+<div class="contenedor">
+
+    <!-- Indicador de progreso de 3 pasos -->
+    <div class="checkout-pasos">
+        <div class="paso-item activo">
+            <span class="paso-circulo">1</span>
+            <span>Entrega</span>
+        </div>
+        <div class="paso-linea"></div>
+        <div class="paso-item">
+            <span class="paso-circulo">2</span>
+            <span>Pago</span>
+        </div>
+        <div class="paso-linea"></div>
+        <div class="paso-item">
+            <span class="paso-circulo">3</span>
+            <span>Confirmación</span>
+        </div>
+    </div>
+
+    <form method="POST" novalidate class="checkout-grid">
+        {% csrf_token %}
+
+        <!-- Columna izquierda: Selección de método de entrega (CU-08) -->
+        <div class="checkout-tarjeta">
+            <h1 class="seccion-titulo" style="margin-bottom: 18px;">¿Cómo deseas recibir tu pedido?</h1>
+
+            <div class="entrega-opciones">
+                <label class="opcion-entrega {% if metodo == 'DOMICILIO' %}seleccionada{% endif %}" id="card-domicilio">
+                    <input type="radio" name="metodo_entrega" value="DOMICILIO" {% if metodo == 'DOMICILIO' %}checked{% endif %} onchange="actualizarEntrega()">
+                    <span class="opcion-icono">🚚</span>
+                    <span class="opcion-titulo">Entrega a domicilio</span>
+                    <span class="opcion-subtitulo">Costo de envío: Q{{ costo_envio_domicilio }}</span>
+                </label>
+
+                <label class="opcion-entrega {% if metodo == 'RETIRO' %}seleccionada{% endif %}" id="card-retiro">
+                    <input type="radio" name="metodo_entrega" value="RETIRO" {% if metodo == 'RETIRO' %}checked{% endif %} onchange="actualizarEntrega()">
+                    <span class="opcion-icono">🏪</span>
+                    <span class="opcion-titulo">Retiro en tienda</span>
+                    <span class="opcion-subtitulo">Gratis (Q0.00)</span>
+                </label>
+            </div>
+
+            <!-- Campos para Entrega a Domicilio -->
+            <div id="bloque-domicilio" {% if metodo == 'RETIRO' %}style="display:none;"{% endif %}>
+                <div class="formulario-grupo">
+                    <label for="direccion_entrega" class="formulario-etiqueta">Dirección completa de entrega *</label>
+                    <input
+                        type="text"
+                        id="direccion_entrega"
+                        name="direccion_entrega"
+                        class="formulario-input {% if errores.direccion %}input-error{% endif %}"
+                        placeholder="Ej. 4ta Avenida 12-30 Zona 10, Ciudad de Guatemala"
+                        value="{{ direccion }}"
+                    >
+                    {% if errores.direccion %}
+                        <span class="texto-error">⚠ {{ errores.direccion }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="formulario-grupo">
+                    <label for="referencia" class="formulario-etiqueta">Referencia o indicaciones adicionales (opcional)</label>
+                    <input
+                        type="text"
+                        id="referencia"
+                        name="referencia"
+                        class="formulario-input"
+                        placeholder="Ej. Portón verde frente al parque"
+                        value="{{ referencia }}"
+                    >
+                </div>
+
+                <div class="formulario-grupo">
+                    <label for="telefono" class="formulario-etiqueta">Teléfono de contacto *</label>
+                    <input
+                        type="text"
+                        id="telefono"
+                        name="telefono"
+                        class="formulario-input {% if errores.telefono %}input-error{% endif %}"
+                        placeholder="Ej. 5512-3456"
+                        value="{{ telefono }}"
+                    >
+                    {% if errores.telefono %}
+                        <span class="texto-error">⚠ {{ errores.telefono }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Información para Retiro en Tienda (CU-08 flujo 2a) -->
+            <div id="bloque-retiro" class="caja-info-retiro" {% if metodo != 'RETIRO' %}style="display:none;"{% endif %}>
+                <h3 class="cuidados-titulo">📍 Dirección de nuestra tienda para retiro</h3>
+                <p style="font-size: 0.95rem; margin-bottom: 6px;">
+                    <strong>12 Calle 4-55 Zona 1, Local 3 — Ciudad de Guatemala</strong>
+                </p>
+                <p style="font-size: 0.88rem; color: #444;">
+                    Horario: Lunes a Sábado de 9:00 a 18:00 hrs. Te avisaremos en <em>Mis pedidos</em> cuando esté listo para recoger.
+                </p>
+            </div>
+        </div>
+
+        <!-- Columna derecha: Resumen del pedido (CU-07) -->
+        <aside class="carrito-resumen">
+            <h2 class="resumen-titulo">Resumen del pedido</h2>
+
+            <div class="resumen-productos-lista">
+                {% for item in items %}
+                    <div class="resumen-fila">
+                        <span>{{ item.cantidad }}x {{ item.producto.nombre }}</span>
+                        <span>Q{{ item.subtotal }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <hr class="resumen-divisor">
+
+            <div class="resumen-fila">
+                <span>Subtotal</span>
+                <span>Q{{ subtotal_general }}</span>
+            </div>
+
+            <div class="resumen-fila">
+                <span>Costo de envío</span>
+                <span id="texto-envio">
+                    {% if metodo == 'RETIRO' %}Q0.00 (Gratis){% else %}Q{{ costo_envio_domicilio }}{% endif %}
+                </span>
+            </div>
+
+            <hr class="resumen-divisor">
+
+            <div class="resumen-fila resumen-total">
+                <span>Total a pagar</span>
+                <span class="precio-destacado" id="texto-total">Q{{ total_estimado }}</span>
+            </div>
+
+            <button type="submit" class="btn-primario btn-ancho" style="margin-top: 16px;">
+                Continuar al pago
+            </button>
+
+            <div style="text-align: center; margin-top: 14px;">
+                <a href="{% url 'ver_carrito' %}" class="enlace-limpiar">Cancelar y volver al carrito</a>
+            </div>
+        </aside>
+    </form>
+
+</div>
+
+<script>
+    function actualizarEntrega() {
+        const seleccionado = document.querySelector('input[name="metodo_entrega"]:checked').value;
+        const bloqueDomicilio = document.getElementById('bloque-domicilio');
+        const bloqueRetiro = document.getElementById('bloque-retiro');
+        const cardDomicilio = document.getElementById('card-domicilio');
+        const cardRetiro = document.getElementById('card-retiro');
+        const textoEnvio = document.getElementById('texto-envio');
+        const textoTotal = document.getElementById('texto-total');
+
+        const subtotal = parseFloat("{{ subtotal_general }}".replace(',', '.'));
+        const envio = parseFloat("{{ costo_envio_domicilio }}".replace(',', '.'));
+
+        if (seleccionado === 'RETIRO') {
+            bloqueDomicilio.style.display = 'none';
+            bloqueRetiro.style.display = 'block';
+            cardRetiro.classList.add('seleccionada');
+            cardDomicilio.classList.remove('seleccionada');
+            textoEnvio.textContent = 'Q0.00 (Gratis)';
+            textoTotal.textContent = 'Q' + subtotal.toFixed(2);
+        } else {
+            bloqueDomicilio.style.display = 'block';
+            bloqueRetiro.style.display = 'none';
+            cardDomicilio.classList.add('seleccionada');
+            cardRetiro.classList.remove('seleccionada');
+            textoEnvio.textContent = 'Q' + envio.toFixed(2);
+            textoTotal.textContent = 'Q' + (subtotal + envio).toFixed(2);
+        }
+    }
+</script>
+{% endblock %}

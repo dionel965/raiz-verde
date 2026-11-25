@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}Pago en línea | Raíz Verde{% endblock %}
+
+{% block content %}
+<div class="contenedor">
+
+    <!-- Indicador de progreso -->
+    <div class="checkout-pasos">
+        <div class="paso-item completado">
+            <span class="paso-circulo">✓</span>
+            <span>Entrega</span>
+        </div>
+        <div class="paso-linea activa"></div>
+        <div class="paso-item activo">
+            <span class="paso-circulo">2</span>
+            <span>Pago</span>
+        </div>
+        <div class="paso-linea"></div>
+        <div class="paso-item">
+            <span class="paso-circulo">3</span>
+            <span>Confirmación</span>
+        </div>
+    </div>
+
+    <div class="checkout-grid">
+        <!-- Columna izquierda: Formulario de pago con tarjeta (CU-09) -->
+        <div class="checkout-tarjeta">
+            <div class="seccion-encabezado">
+                <h1 class="seccion-titulo">Pago con tarjeta</h1>
+                <span class="chip-etiqueta">🔒 Conexión segura</span>
+            </div>
+
+            <!-- Alerta de Pasarela (CU-09 flujos 4a y 4b) -->
+            {% if error_pasarela %}
+                <div class="alerta alerta-error">
+                    <strong>⚠ {{ error_pasarela.titulo }}</strong>
+                    <p style="margin-top: 4px;">{{ error_pasarela.detalle }}</p>
+                </div>
+            {% endif %}
+
+            <form method="POST" novalidate id="form-pago">
+                {% csrf_token %}
+
+                <div class="formulario-grupo">
+                    <label for="titular" class="formulario-etiqueta">Nombre del titular de la tarjeta</label>
+                    <input
+                        type="text"
+                        id="titular"
+                        name="titular"
+                        class="formulario-input {% if errores_campos.titular %}input-error{% endif %}"
+                        placeholder="Ej. Ana Lucía Morales"
+                        value="{{ titular }}"
+                        required
+                    >
+                    {% if errores_campos.titular %}
+                        <span class="texto-error">⚠ {{ errores_campos.titular }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="formulario-grupo">
+                    <label for="numero_tarjeta" class="formulario-etiqueta">Número de tarjeta (Visa / Mastercard)</label>
+                    <input
+                        type="text"
+                        id="numero_tarjeta"
+                        name="numero_tarjeta"
+                        maxlength="19"
+                        class="formulario-input {% if errores_campos.numero_tarjeta or error_pasarela %}input-error{% endif %}"
+                        placeholder="4532 1234 5678 4532"
+                        value="{{ numero_tarjeta }}"
+                        required
+                    >
+                    {% if errores_campos.numero_tarjeta %}
+                        <span class="texto-error">⚠ {{ errores_campos.numero_tarjeta }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="pago-fila-doble">
+                    <div class="formulario-grupo">
+                        <label for="expiracion" class="formulario-etiqueta">Vencimiento (MM/AA)</label>
+                        <input
+                            type="text"
+                            id="expiracion"
+                            name="expiracion"
+                            maxlength="5"
+                            class="formulario-input {% if errores_campos.expiracion %}input-error{% endif %}"
+                            placeholder="08/28"
+                            value="{{ expiracion|default:'08/28' }}"
+                            required
+                        >
+                        {% if errores_campos.expiracion %}
+                            <span class="texto-error">⚠ {{ errores_campos.expiracion }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="formulario-grupo">
+                        <label for="cvv" class="formulario-etiqueta">Código de seguridad (CVV)</label>
+                        <input
+                            type="password"
+                            id="cvv"
+                            name="cvv"
+                            maxlength="4"
+                            class="formulario-input {% if errores_campos.cvv %}input-error{% endif %}"
+                            placeholder="123"
+                            required
+                        >
+                        {% if errores_campos.cvv %}
+                            <span class="texto-error">⚠ {{ errores_campos.cvv }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primario btn-ancho">
+                    {% if error_pasarela %}Reintentar pago (Q{{ total_pagar }}){% else %}Pagar Q{{ total_pagar }}{% endif %}
+                </button>
+
+                <div style="text-align: center; margin-top: 14px;">
+                    <a href="{% url 'ver_carrito' %}" class="enlace-limpiar">Cancelar pago y volver al carrito</a>
+                </div>
+            </form>
+
+            <!-- Barra discreta de ayuda para pruebas de laboratorio -->
+            <div class="caja-pruebas-pasarela">
+                <p style="font-size: 0.8rem; color: #555; margin-bottom: 8px;">
+                    <strong>Autocompletado rápido para pruebas (CU-09):</strong>
+                </p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" class="btn-secundario btn-sm" onclick="llenarTarjeta('4532123456784532')">✓ Pago aprobado</button>
+                    <button type="button" class="btn-secundario btn-sm" onclick="llenarTarjeta('4532123456780000')">✕ Simular rechazo</button>
+                    <button type="button" class="btn-secundario btn-sm" onclick="llenarTarjeta('4532123456789999')">⏳ Sin respuesta</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna derecha: Resumen del pedido -->
+        <aside class="carrito-resumen">
+            <h2 class="resumen-titulo">Resumen del pedido</h2>
+
+            <p style="font-size: 0.88rem; color: #555; margin-bottom: 12px;">
+                <strong>Entrega:</strong>
+                {% if datos_entrega.metodo_entrega == 'DOMICILIO' %}
+                    Domicilio — {{ datos_entrega.direccion_entrega }}
+                {% else %}
+                    Retiro en tienda (Zona 1)
+                {% endif %}
+            </p>
+
+            <div class="resumen-productos-lista">
+                {% for item in items %}
+                    <div class="resumen-fila">
+                        <span>{{ item.cantidad }}x {{ item.producto.nombre }}</span>
+                        <span>Q{{ item.subtotal }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <hr class="resumen-divisor">
+
+            <div class="resumen-fila">
+                <span>Subtotal</span>
+                <span>Q{{ subtotal_general }}</span>
+            </div>
+
+            <div class="resumen-fila">
+                <span>Costo de envío</span>
+                <span>{% if costo_envio == 0 %}Q0.00 (Gratis){% else %}Q{{ costo_envio }}{% endif %}</span>
+            </div>
+
+            <hr class="resumen-divisor">
+
+            <div class="resumen-fila resumen-total">
+                <span>Total a pagar</span>
+                <span class="precio-destacado">Q{{ total_pagar }}</span>
+            </div>
+        </aside>
+    </div>
+
+</div>
+
+<script>
+    function llenarTarjeta(numero) {
+        const titular = document.getElementById('titular');
+        if (!titular.value) titular.value = 'Ana Lucía Morales';
+        document.getElementById('numero_tarjeta').value = numero;
+        document.getElementById('expiracion').value = '08/28';
+        document.getElementById('cvv').value = '456';
+    }
+</script>
+{% endblock %}

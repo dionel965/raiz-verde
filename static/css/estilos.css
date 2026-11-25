@@ -924,3 +924,207 @@ body.pagina-cuerpo {
         padding-top: 10px;
     }
 }
+/* =========================================================
+   PASO 6: ENTREGA, PAGO Y CONFIRMACIÓN (CU-07, CU-08, CU-09)
+   ========================================================= */
+
+.checkout-pasos {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+.paso-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #777;
+    font-weight: 500;
+}
+
+.paso-item.activo,
+.paso-item.completado {
+    color: var(--color-verde-bosque);
+    font-weight: 600;
+}
+
+.paso-circulo {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: #E0E0E0;
+    color: #555;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.paso-item.activo .paso-circulo,
+.paso-item.completado .paso-circulo {
+    background-color: var(--color-verde-bosque);
+    color: var(--color-blanco);
+}
+
+.paso-linea {
+    width: 48px;
+    height: 2px;
+    background-color: #D5D8D4;
+}
+
+.paso-linea.activa {
+    background-color: var(--color-verde-bosque);
+}
+
+.checkout-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 0.9fr;
+    gap: 28px;
+    align-items: start;
+}
+
+.checkout-tarjeta {
+    background-color: var(--color-blanco);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 3px 14px rgba(30, 58, 47, 0.06);
+}
+
+.entrega-opciones {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.opcion-entrega {
+    border: 1.5px solid #D5D8D4;
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: all 0.2s ease;
+}
+
+.opcion-entrega input[type="radio"] {
+    display: none;
+}
+
+.opcion-entrega.seleccionada {
+    border-color: var(--color-verde-bosque);
+    background-color: #F2F6EE;
+}
+
+.opcion-icono {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+}
+
+.opcion-titulo {
+    font-weight: 600;
+    color: var(--color-verde-bosque);
+}
+
+.opcion-subtitulo {
+    font-size: 0.85rem;
+    color: #555;
+}
+
+.caja-info-retiro {
+    background-color: var(--color-verde-salvia);
+    padding: 18px;
+    border-radius: 12px;
+}
+
+.pago-fila-doble {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.caja-pruebas-pasarela {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px dashed #D5D8D4;
+}
+
+/* Confirmación */
+.confirmacion-tarjeta {
+    background-color: var(--color-blanco);
+    max-width: 680px;
+    margin: 0 auto;
+    border-radius: 16px;
+    padding: 36px;
+    box-shadow: 0 4px 20px rgba(30, 58, 47, 0.08);
+}
+
+.confirmacion-encabezado {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.confirmacion-check {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: var(--color-verde-salvia);
+    color: var(--color-verde-bosque);
+    font-size: 1.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+}
+
+.confirmacion-codigo-caja {
+    background-color: #F2F6EE;
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 22px;
+}
+
+.confirmacion-codigo {
+    font-family: var(--fuente-titulo);
+    font-size: 1.35rem;
+    color: var(--color-verde-bosque);
+}
+
+.badge-estado {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background-color: var(--color-verde-salvia);
+    color: var(--color-verde-bosque);
+}
+
+.confirmacion-acciones {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+}
+
+.confirmacion-acciones a {
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    .checkout-grid,
+    .entrega-opciones,
+    .pago-fila-doble {
+        grid-template-columns: 1fr;
+    }
+}

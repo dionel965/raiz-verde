@@ -12,6 +12,11 @@ urlpatterns = [
     path('carrito/actualizar/<int:producto_id>/', views.actualizar_carrito, name='actualizar_carrito'),
     path('carrito/eliminar/<int:producto_id>/', views.eliminar_del_carrito, name='eliminar_del_carrito'),
 
+    # Rutas del Checkout / Compra (CU-07, CU-08 y CU-09)
+    path('pedido/entrega/', views.seleccionar_entrega, name='seleccionar_entrega'),
+    path('pedido/pago/', views.procesar_pago, name='procesar_pago'),
+    path('pedido/confirmacion/<int:pedido_id>/', views.confirmacion_pedido, name='confirmacion_pedido'),
+
     # Autenticación (CU-01 y CU-02)
     path('registro/', views.registro_usuario, name='registro'),
     path('login/', views.login_usuario, name='login'),
