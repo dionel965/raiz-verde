@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Inicio | Raíz Verde{% endblock %}
 
@@ -18,13 +19,9 @@
                 <a href="{% url 'catalogo' %}?categoria=1" class="btn-secundario">Ver plantas de interior</a>
             </div>
         </div>
-        <div class="hero-visual">
-            <div class="hero-imagen-placeholder">
-                <span class="hero-emoji">🌿🪴</span>
-                <p>Colección botánica seleccionada</p>
-            </div>
-        </div>
-    </section>
+     <div class="hero-visual">
+    <img src="{% static 'img/hero-raiz-verde.jpg' %}" alt="Colección botánica seleccionada" style="width: 100%; height: 280px; object-fit: cover; border-radius: 14px;">
+</div>
 
     <!-- Explora por Categoría -->
     <section class="seccion-bloque">
