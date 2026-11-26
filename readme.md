@@ -4,7 +4,7 @@ Aplicación web de comercio electrónico desarrollada en **Django** para la vent
 
 Proyecto desarrollado en colaboración internacional **COIL — UTP (Universidad Tecnológica de Panamá) × UVG (Universidad del Valle de Guatemala)**.
 
-   **Diseño inicial:** [https://www.figma.com/design/nzccReyHkwfPgv676EbV82/Tienda-de-plantas?node-id=0-1&t=mX7zZ5gu5KVsfAkP-1](https://www.figma.com/design/nzccReyHkwfPgv676EbV82/Tienda-de-plantas?node-id=0-1&t=mX7zZ5gu5KVsfAkP-1)  
+🖌 **Diseño inicial:** [https://www.figma.com/design/nzccReyHkwfPgv676EbV82/Tienda-de-plantas?node-id=0-1&t=mX7zZ5gu5KVsfAkP-1](https://www.figma.com/design/nzccReyHkwfPgv676EbV82/Tienda-de-plantas?node-id=0-1&t=mX7zZ5gu5KVsfAkP-1)  
 🔗 **Sitio web en vivo:** [https://bayro79.pythonanywhere.com/](https://bayro79.pythonanywhere.com/)  
 🔧 **Panel de Administración:** [https://bayro79.pythonanywhere.com/admin/](https://bayro79.pythonanywhere.com/admin/)
 
