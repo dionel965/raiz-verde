@@ -19,9 +19,10 @@
                 <a href="{% url 'catalogo' %}?categoria=1" class="btn-secundario">Ver plantas de interior</a>
             </div>
         </div>
-     <div class="hero-visual">
-    <img src="{% static 'img/hero-raiz-verde.jpg' %}" alt="Colección botánica seleccionada" style="width: 100%; height: 280px; object-fit: cover; border-radius: 14px;">
-</div>
+        <div class="hero-visual">
+            <img src="{% static 'img/hero-raiz-verde.jpg' %}" alt="Colección botánica seleccionada" style="width: 100%; height: 280px; object-fit: cover; border-radius: 14px;">
+        </div>
+    </section>
 
     <!-- Explora por Categoría -->
     <section class="seccion-bloque">
@@ -96,3 +97,11 @@
 
 </div>
 {% endblock %}
+```[cite: 12, 13]
+
+### Cómo comprobarlo
+
+1. Guarda `templates/tienda/inicio.html` con **Ctrl + S** y recarga la página en el navegador con **Ctrl + F5**.
+2. Pasa de nuevo el cursor sobre `section.hero` en la pestaña **Elementos** (`F12`): ahora solo debe resaltar la tarjeta del *Hero* con su altura normal y dejar debajo por separado *Explora por categoría*, *Productos destacados* y *Beneficios*.
+
+Si después de cerrar `<section class="hero">` y `</div>` todavía notas algún ajuste de ancho o columnas, dime cómo se ve y lo revisamos.

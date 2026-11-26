@@ -403,7 +403,7 @@ body.pagina-cuerpo {
 /* Cuadrícula y Tarjetas de Productos */
 .productos-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 24px;
 }
 
@@ -732,6 +732,7 @@ body.pagina-cuerpo {
         grid-template-columns: 1fr;
     }
 }
+
 /* =========================================================
    PASO 5: CARRITO DE COMPRAS (CU-06)
    ========================================================= */
@@ -924,6 +925,7 @@ body.pagina-cuerpo {
         padding-top: 10px;
     }
 }
+
 /* =========================================================
    PASO 6: ENTREGA, PAGO Y CONFIRMACIÓN (CU-07, CU-08, CU-09)
    ========================================================= */
@@ -1128,6 +1130,7 @@ body.pagina-cuerpo {
         grid-template-columns: 1fr;
     }
 }
+
 /* =========================================================
    PASO 7: MIS PEDIDOS Y DETALLE DEL PEDIDO (CU-10)
    ========================================================= */
